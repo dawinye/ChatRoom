@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
+	//message := Message{host, username, username}
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print(">> ")
