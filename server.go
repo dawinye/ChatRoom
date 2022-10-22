@@ -1,18 +1,26 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
 	"strconv"
-	"strings"
-	"time"
 )
 
 type Message struct {
-	To, From, content string
+	To, From, Content string
 }
+
+//func handleConn(conn net.Conn) {
+//	defer conn.Close()
+//
+//	for {
+//
+//	}
+//}
 
 func main() {
 	args := os.Args
@@ -38,21 +46,29 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	tmp := make([]byte, 500)
 	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println(strings.TrimSpace(string(netData)))
-		if strings.TrimSpace(string(netData)) == "STOP" {
-			fmt.Println("Exiting TCP server!")
-			return
-		}
+		_, err = c.Read(tmp)
+		tmpbuff := bytes.NewBuffer(tmp)
+		tmpstruct := new(Message)
+		gobobj := gob.NewDecoder(tmpbuff)
+		gobobj.Decode(tmpstruct)
+		fmt.Println(tmpstruct)
 
-		fmt.Print("-> ", string(netData))
-		t := time.Now()
-		myTime := t.Format(time.RFC3339) + "\n"
-		c.Write([]byte(myTime))
+		//netData, err := bufio.NewReader(c).ReadString('\n')
+		//if err != nil {
+		//	fmt.Println(err)
+		//	return
+		//}
+		//fmt.Println(strings.TrimSpace(string(netData)))
+		//if strings.TrimSpace(string(netData)) == "STOP" {
+		//	fmt.Println("Exiting TCP server!")
+		//	return
+		//}
+		//
+		//fmt.Print("-> ", string(netData))
+		//t := time.Now()
+		//myTime := t.Format(time.RFC3339) + "\n"
+		//c.Write([]byte(myTime))
 	}
 }
