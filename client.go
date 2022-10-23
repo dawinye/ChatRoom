@@ -14,6 +14,18 @@ type Message struct {
 	To, From, Content string
 }
 
+//reads from the connection and prints it out if another client sends a message
+func receiveMessage(conn net.Conn) {
+	msg := make([]byte, 500)
+	for {
+
+		_, err := conn.Read(msg)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(msg))
+	}
+}
 func main() {
 	//check the user inputs to see if they entered the right amount
 	args := os.Args
@@ -34,12 +46,15 @@ func main() {
 	}
 
 	c, err := net.Dial("tcp4", host+":"+port)
+
+	//use a goroutine to continuously check if a message has been sent to this client
+	go receiveMessage(c)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	//tmp := make([]byte, 500)
+	fmt.Fprint(c, username+"\n")
+	tmp := make([]byte, 500)
 	for {
 		//bin_buf := new(bytes.Buffer)
 
@@ -56,16 +71,23 @@ func main() {
 			fmt.Println("Please enter your message with two commas (,,) to separate the recipient of the message and the message contents  (in that order)")
 			continue
 		}
+
 		msg := new(Message)
+
+		//populate the message struct with appropriate values
 		msg.To = messageArr[0]
 		msg.Content = messageArr[1]
 		msg.From = username
+
+		//use gob to encode the message and write to the server
 		bin_buf := new(bytes.Buffer)
 		gobobj := gob.NewEncoder(bin_buf)
 		gobobj.Encode(msg)
-
 		c.Write(bin_buf.Bytes())
 
+		//read from the server whether the message was successfully sent
+		c.Read(tmp)
+		fmt.Println(string(tmp))
 		//fmt.Fprintf(c, msg.content+"\n")
 		//message, _ := bufio.NewReader(c).ReadString('\n')
 		//fmt.Print("->: " + message)
