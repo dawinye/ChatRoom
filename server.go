@@ -73,16 +73,24 @@ func sendMessage(msg Message) {
 	toConn, present := m[msg.To]
 
 	bin_buf := new(bytes.Buffer)
+	bin_bufTwo := new(bytes.Buffer)
 	gobobj := gob.NewEncoder(bin_buf)
-	gobobj.Encode(msg)
+	gobobjTwo := gob.NewEncoder(bin_bufTwo)
 
 	//c.Write(bin_buf.Bytes())
 
 	if present == false {
-		fromConn.Write([]byte("Failure"))
+		strOne := "Failure"
+		gobobj.Encode(strOne)
+		fromConn.Write(bin_buf.Bytes())
 	} else {
-		toConn.Write([]byte("From: " + msg.From + " Message: " + msg.Content))
-		fromConn.Write([]byte("Message successfully delivered to" + msg.To))
+		strOne := "Message successfully delivered to " + msg.To
+		gobobj.Encode(strOne)
+		fromConn.Write(bin_buf.Bytes())
+
+		strTwo := "From: " + msg.From + " Message: " + msg.Content
+		gobobjTwo.Encode(strTwo)
+		toConn.Write(bin_bufTwo.Bytes())
 	}
 }
 func stopServer() {

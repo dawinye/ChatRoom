@@ -19,6 +19,8 @@ type Message struct {
 func receiveMessage(conn net.Conn) {
 	defer conn.Close()
 	msg := make([]byte, 500)
+	//str := new(string)
+
 	for {
 		_, err := conn.Read(msg)
 		if err == io.EOF {
@@ -28,15 +30,19 @@ func receiveMessage(conn net.Conn) {
 		if err != nil {
 			fmt.Println("this is err: ", err)
 		}
+		tmpbuff := bytes.NewBuffer(msg)
+		gobobj := gob.NewDecoder(tmpbuff)
+		gobobj.Decode(msg)
 
 		if strings.Compare(string(msg[:4]), "EXIT") == 0 {
 			os.Exit(1)
 		} else {
-			fmt.Println(string(msg[:50]))
+			fmt.Println(string(msg[:50])) // [ 29 20 20 0 ]
 			//msg = msg[:0]
 			fmt.Print(">> ")
 		}
-
+		//how can i clear this without doing it this way
+		msg = make([]byte, 500)
 	}
 }
 
