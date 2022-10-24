@@ -26,6 +26,7 @@ type Message struct {
 //defined in a server, as well as check if a username should be rejected
 //if it already exists in the server
 var m = make(map[string]net.Conn)
+var finish bool = false
 
 //use a connection handler to ensure each server can handle multiple clients
 func handleConn(conn net.Conn) {
@@ -34,7 +35,7 @@ func handleConn(conn net.Conn) {
 	username := strings.TrimSpace(string(text))
 	m[username] = conn
 
-	defer conn.Close()
+	//defer conn.Close()
 	tmp := make([]byte, 500)
 	for {
 		_, err := conn.Read(tmp)
@@ -65,6 +66,28 @@ func sendMessage(msg Message) {
 		fromConn.Write([]byte("Message successfully delivered to " + msg.To))
 	}
 }
+func stopServer() {
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print(">> ")
+		text, _ := reader.ReadString('\n')
+		if strings.TrimSpace(string(text)) == "EXIT" {
+			closeClients()
+			fmt.Println("Server terminated.")
+			os.Exit(1)
+			return
+		} else {
+			fmt.Println("Please enter \"EXIT\" to stop the server. No other commmands are supported")
+		}
+	}
+}
+func closeClients() {
+	for _, conn := range m {
+		conn.Write([]byte("EXIT"))
+		fmt.Println([]byte("EXIT"))
+		fmt.Println(string([]byte("EXIT")))
+	}
+}
 
 func main() {
 	args := os.Args
@@ -88,6 +111,8 @@ func main() {
 	}
 	defer l.Close()
 
+	go stopServer()
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -97,34 +122,5 @@ func main() {
 		//run each client connection in a goroutine to allow concurrency
 		go handleConn(conn)
 	}
-	//c, err := l.Accept()
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//tmp := make([]byte, 500)
-	//for {
-	//	_, err = c.Read(tmp)
-	//	tmpbuff := bytes.NewBuffer(tmp)
-	//	tmpstruct := new(Message)
-	//	gobobj := gob.NewDecoder(tmpbuff)
-	//	gobobj.Decode(tmpstruct)
-	//	fmt.Println(tmpstruct)
 
-	//netData, err := bufio.NewReader(c).ReadString('\n')
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//fmt.Println(strings.TrimSpace(string(netData)))
-	//if strings.TrimSpace(string(netData)) == "STOP" {
-	//	fmt.Println("Exiting TCP server!")
-	//	return
-	//}
-	//
-	//fmt.Print("-> ", string(netData))
-	//t := time.Now()
-	//myTime := t.Format(time.RFC3339) + "\n"
-	//c.Write([]byte(myTime))
-	//}
 }

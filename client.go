@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -16,15 +17,30 @@ type Message struct {
 
 //reads from the connection and prints it out if another client sends a message
 func receiveMessage(conn net.Conn) {
+	defer conn.Close()
 	msg := make([]byte, 500)
 	for {
 
 		_, err := conn.Read(msg)
-		if err != nil {
-			fmt.Println(err)
+		if err == io.EOF {
+			os.Exit(1)
 		}
-		fmt.Println(string(msg))
+		if err != nil {
+			fmt.Println("this is err: ", err)
+		}
+		//server is supposed to send "EXIT" to all clients if the server is terminated
+		//i have absolutely no clue why the if block never runs so we can bypass it with chekcing
+		//for EOF as the specific error
+		if string(msg) == "EXIT" {
+			os.Exit(1)
+		} else {
+			fmt.Print(string(msg))
+		}
+
 	}
+}
+func waitForStop(conn net.Conn) {
+
 }
 func main() {
 	//check the user inputs to see if they entered the right amount
@@ -93,17 +109,5 @@ func main() {
 		//fmt.Print("->: " + message)
 
 	}
-	//for {
-	//	reader := bufio.NewReader(os.Stdin)
-	//	fmt.Print(">> ")
-	//	text, _ := reader.ReadString('\n')
-	//	fmt.Fprintf(c, text+"\n")
-	//
-	//	message, _ := bufio.NewReader(c).ReadString('\n')
-	//	fmt.Print("->: " + message)
-	//	if strings.TrimSpace(string(text)) == "STOP" {
-	//		fmt.Println("TCP client exiting...")
-	//		return
-	//	}
-	//}
+
 }
