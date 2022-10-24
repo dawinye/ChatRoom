@@ -43,11 +43,18 @@ func handleConn(conn net.Conn) {
 			fmt.Println(err)
 			continue
 		}
+
+		if string(tmp[:4]) == "EXIT" {
+			delete(m, username)
+			conn.Close()
+			return
+		}
 		tmpbuff := bytes.NewBuffer(tmp)
 		tmpstruct := new(Message)
 		gobobj := gob.NewDecoder(tmpbuff)
 		gobobj.Decode(tmpstruct)
 		sendMessage(*tmpstruct)
+		fmt.Println("did i get in here")
 	}
 }
 
@@ -64,6 +71,7 @@ func sendMessage(msg Message) {
 	} else {
 		toConn.Write([]byte("From: " + msg.From + " Message: " + msg.Content))
 		fromConn.Write([]byte("Message successfully delivered to " + msg.To))
+		fmt.Println("this is done")
 	}
 }
 func stopServer() {
@@ -84,8 +92,6 @@ func stopServer() {
 func closeClients() {
 	for _, conn := range m {
 		conn.Write([]byte("EXIT"))
-		fmt.Println([]byte("EXIT"))
-		fmt.Println(string([]byte("EXIT")))
 	}
 }
 

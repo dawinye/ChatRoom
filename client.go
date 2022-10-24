@@ -20,21 +20,21 @@ func receiveMessage(conn net.Conn) {
 	defer conn.Close()
 	msg := make([]byte, 500)
 	for {
-
 		_, err := conn.Read(msg)
 		if err == io.EOF {
+			fmt.Println("Server has unexpectedly terminated the connection. Exiting now.")
 			os.Exit(1)
 		}
 		if err != nil {
 			fmt.Println("this is err: ", err)
 		}
 		//server is supposed to send "EXIT" to all clients if the server is terminated
-		//i have absolutely no clue why the if block never runs so we can bypass it with chekcing
+		//i have absolutely no clue why the if block never runs so we can bypass it with checking
 		//for EOF as the specific error
-		if string(msg) == "EXIT" {
+		if strings.Compare(string(msg[:4]), "EXIT") == 0 {
 			os.Exit(1)
 		} else {
-			fmt.Print(string(msg))
+			fmt.Println(string(msg))
 		}
 
 	}
@@ -78,6 +78,7 @@ func main() {
 		fmt.Print(">> ")
 		text, _ := reader.ReadString('\n')
 		if strings.TrimSpace(string(text)) == "EXIT" {
+			c.Write([]byte("EXIT"))
 			fmt.Println("TCP client exiting...")
 			return
 		}
@@ -103,11 +104,9 @@ func main() {
 
 		//read from the server whether the message was successfully sent
 		c.Read(tmp)
+		fmt.Println("here1")
 		fmt.Println(string(tmp))
-		//fmt.Fprintf(c, msg.content+"\n")
-		//message, _ := bufio.NewReader(c).ReadString('\n')
-		//fmt.Print("->: " + message)
-
+		fmt.Println("here")
 	}
 
 }
