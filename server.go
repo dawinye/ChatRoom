@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"strings"
 
 	//"bufio"
@@ -39,22 +40,27 @@ func handleConn(conn net.Conn) {
 	tmp := make([]byte, 500)
 	for {
 		_, err := conn.Read(tmp)
+		if err == io.EOF || string(tmp[:4]) == "EXIT" {
+			delete(m, username)
+			conn.Close()
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
-		if string(tmp[:4]) == "EXIT" {
-			delete(m, username)
-			conn.Close()
-			return
-		}
+		//if string(tmp[:4]) == "EXIT" {
+		//	delete(m, username)
+		//	conn.Close()
+		//	return
+		//}
 		tmpbuff := bytes.NewBuffer(tmp)
 		tmpstruct := new(Message)
 		gobobj := gob.NewDecoder(tmpbuff)
 		gobobj.Decode(tmpstruct)
 		sendMessage(*tmpstruct)
-		fmt.Println("did i get in here")
+
 	}
 }
 
@@ -66,12 +72,17 @@ func sendMessage(msg Message) {
 	fromConn := m[msg.From]
 	toConn, present := m[msg.To]
 
+	bin_buf := new(bytes.Buffer)
+	gobobj := gob.NewEncoder(bin_buf)
+	gobobj.Encode(msg)
+
+	//c.Write(bin_buf.Bytes())
+
 	if present == false {
 		fromConn.Write([]byte("Failure"))
 	} else {
 		toConn.Write([]byte("From: " + msg.From + " Message: " + msg.Content))
-		fromConn.Write([]byte("Message successfully delivered to " + msg.To))
-		fmt.Println("this is done")
+		fromConn.Write([]byte("Message successfully delivered to" + msg.To))
 	}
 }
 func stopServer() {
@@ -110,6 +121,7 @@ func main() {
 		fmt.Println("Please rerun the program using \"go run server.go (port number between 0 and 65535)\"")
 		return
 	}
+
 	l, err := net.Listen("tcp4", ":"+args[1])
 	if err != nil {
 		fmt.Println(err)

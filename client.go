@@ -28,20 +28,18 @@ func receiveMessage(conn net.Conn) {
 		if err != nil {
 			fmt.Println("this is err: ", err)
 		}
-		//server is supposed to send "EXIT" to all clients if the server is terminated
-		//i have absolutely no clue why the if block never runs so we can bypass it with checking
-		//for EOF as the specific error
+
 		if strings.Compare(string(msg[:4]), "EXIT") == 0 {
 			os.Exit(1)
 		} else {
-			fmt.Println(string(msg))
+			fmt.Println(string(msg[:50]))
+			//msg = msg[:0]
+			fmt.Print(">> ")
 		}
 
 	}
 }
-func waitForStop(conn net.Conn) {
 
-}
 func main() {
 	//check the user inputs to see if they entered the right amount
 	args := os.Args
@@ -70,9 +68,7 @@ func main() {
 		return
 	}
 	fmt.Fprint(c, username+"\n")
-	tmp := make([]byte, 500)
 	for {
-		//bin_buf := new(bytes.Buffer)
 
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print(">> ")
@@ -101,12 +97,6 @@ func main() {
 		gobobj := gob.NewEncoder(bin_buf)
 		gobobj.Encode(msg)
 		c.Write(bin_buf.Bytes())
-
-		//read from the server whether the message was successfully sent
-		c.Read(tmp)
-		fmt.Println("here1")
-		fmt.Println(string(tmp))
-		fmt.Println("here")
 	}
 
 }

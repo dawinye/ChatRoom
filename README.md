@@ -8,6 +8,20 @@ create a client, run <code><b>go run client.go {host address} {port number} {use
 For the purposes of this assignment, we have decided to limit the host address to 
 127.0.0.1 so clients can only connect to servers on the same machine. 
 
+<h2> Usage </h2>
+After running the server in a terminal, the only command that the server can take is
+"EXIT", which will exit the server and close all clients and their connections. Other 
+inputs into the server terminal will not be supported. 
+
+To send a message from user1 to user2 go to user1's client and enter 
+
+"<b>user2,, {message to deliver}</b>"
+
+We decided to use two commas as a separator between the username and content because two commas 
+wouldn't normally be part of a message, whereas one comma or any other punctuation would be. Messages 
+that are not formatted this way will generate errors, such as not having a separator or having multiple 
+sets of separators.
+
 <h2> Documentation </h2>
 
 
