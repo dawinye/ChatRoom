@@ -30,19 +30,27 @@ var m = make(map[string]net.Conn)
 
 // use a connection handler to ensure each server can handle multiple clients
 func handleConn(conn net.Conn) {
-	usernamebuf := make([]byte, 500)
-	conn.Read(usernamebuf)
+	//made a buffer and store what's read from the client into said buffer
+	usernameBuf := make([]byte, 500)
+	conn.Read(usernameBuf)
+
+	//decode the username and populate the map
 	username := new(string)
-	tmpBuff := bytes.NewBuffer(usernamebuf)
+	tmpBuff := bytes.NewBuffer(usernameBuf)
 	gobObj := gob.NewDecoder(tmpBuff)
 	gobObj.Decode(username)
 	m[*username] = conn
+
 	fmt.Println(*username + " has connected to this server")
 	fmt.Print(">> ")
-	//defer conn.Close()
+
+	//store new messages into tmp
 	tmp := make([]byte, 500)
 	for {
 		_, err := conn.Read(tmp)
+
+		// if the client disconnects unexpectedly via ctrl + C or voluntarily via exit, it disconnects
+		//remove the mapping and close the connection
 		if err == io.EOF || string(tmp[:4]) == "EXIT" {
 			delete(m, *username)
 			conn.Close()
@@ -55,15 +63,12 @@ func handleConn(conn net.Conn) {
 			continue
 		}
 
-		//if string(tmp[:4]) == "EXIT" {
-		//	delete(m, username)
-		//	conn.Close()
-		//	return
-		//}
+		//decode the message from the client
 		tmpBuff = bytes.NewBuffer(tmp)
 		tmpStruct := new(Message)
 		gobObj = gob.NewDecoder(tmpBuff)
 		gobObj.Decode(tmpStruct)
+		//send it to this function which checks if user2 is connected
 		sendMessage(*tmpStruct)
 
 	}
@@ -77,12 +82,11 @@ func sendMessage(msg Message) {
 	fromConn := m[msg.From]
 	toConn, present := m[msg.To]
 
+	//separate encoders and buffers
 	bin_buf := new(bytes.Buffer)
 	bin_bufTwo := new(bytes.Buffer)
 	gobobj := gob.NewEncoder(bin_buf)
 	gobobjTwo := gob.NewEncoder(bin_bufTwo)
-
-	//c.Write(bin_buf.Bytes())
 
 	if present == false {
 		strOne := "Error: That user is not connected to the server. Maybe they will be here soon!"
@@ -102,6 +106,8 @@ func sendMessage(msg Message) {
 		toConn.Write(bin_bufTwo.Bytes())
 	}
 }
+
+//function to check if the user enters EXIT
 func stopServer() {
 	for {
 		reader := bufio.NewReader(os.Stdin)
@@ -117,6 +123,8 @@ func stopServer() {
 		}
 	}
 }
+
+//closes all client connection if the server terminates
 func closeClients() {
 	for _, conn := range m {
 		conn.Write([]byte("EXIT"))
@@ -146,6 +154,7 @@ func main() {
 	}
 	defer l.Close()
 
+	//check if the server stops in a goroutine
 	go stopServer()
 
 	for {

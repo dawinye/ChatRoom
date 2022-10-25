@@ -17,11 +17,27 @@ type Message struct {
 
 // use to help slice the decoded string from gob
 func sliceHelper(sl []byte) []byte {
-	for i, v := range sl {
-		if v == 10 {
-			return sl[:i]
+	low := 0
+	high := len(sl) - 1
+	mid := 0
+	// 10 is Ascii newLine character, which signifies end of the message
+	target := 10
+
+	// binary search for target; receiver looks like: [{positive nums != 10}, 10, 0, 0, ... 0]
+	for low <= high {
+		mid = (high + low) / 2
+		if int(sl[mid]) == target {
+			return sl[:mid]
+		}
+		// a positive value (!= 10) means index mid is still indexing part of the message
+		if int(sl[mid]) > 0 {
+			low = mid + 1
+			// 0 means index mid is not indexing the message
+		} else if int(sl[mid]) == 0 {
+			high = mid - 1
 		}
 	}
+	// 10 not found; must be sender
 	return sl
 }
 
@@ -48,7 +64,7 @@ func receiveMessage(conn net.Conn) {
 		fmt.Print(">> ")
 
 		//clear the message array so that the next time we receive a message we don't overwrite the old one,
-		//which could be problematic if
+		//which could be problematic if the new message is shorter than the old one
 		msg = make([]byte, 500)
 	}
 }

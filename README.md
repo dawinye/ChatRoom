@@ -33,17 +33,33 @@ the exit command is entered.
 For serialization, we decided to use gob as that was what our HW1 Q3 told us that it was the fastest out of the methods
 that we tested. The flow of information with encoding and decoding can be seen in the following figure. In instances where
 a function would need to encode/decode multiple times, we tried to reuse the encoder/decoder objects if it didn't generate errors.
+In the first set of encoding and decoding, the sending client and server encode/decode the message as a message struct. However,
+in the second encoding/decoding it is done as a string. This is because neither client needs to know all three parts of the message
+struct (sender needs to know it was delivered to recipient, recipient needs to know who send it plus the content).
+<img src="diagram.png"> 
 
 All communication written and read between the server and clients are stored in byte arrays of size 500.
 This means that there will be errors or cut off text if messages are longer than 500 characters. We decided to use 500
 as significantly longer messages were not needed, and it is impossible to dynamically allocate an array of the specific
 size as the message being read in (don't know how big the message is before we call conn.Read(arr), so 500 is sufficiently large enough.
 Finally, in regard to printing messages, our client uses <code>sliceHelper(msg[4:]) </code>. This is because we found that the first 4 
-bytes of a decoded byte array from gob are unnecessary, as well as the last bytes starting with the number 10. These quirks in the byte array
-made us decide to process it so that the message would print nicer. It should be noticed that this will take O(n) time, but we decided it was 
+bytes of a decoded byte array from gob are unnecessary, as well as the last bytes starting with the number 10 (new line char). These quirks in the byte array
+made us decide to process it so that the message would print nicer. It should be noticed that this will take O(log(n)) time, but we decided it was 
 worth the trade-off to have more streamlined messages.
 
+For future implementations, it would be possible for us to have different sized byte arrays created say 1,000, 10,000, and 1,000,000 and basically have copies of the different functions with only their array size being different. This would allow cases where someone may want to send a 1,000 character message or even 10,000. However we decided it was not necessary to do this for the homework but could be part of a larger implementation.
 
 
-<h2> Justification</h2>
+<h2> Sources </h2>
+I used this example code to re-familiarize myself with maps and slices: https://gobyexample.com/maps
+https://gobyexample.com/slices
+
+I used this example to catch EOF errors from repeatedly printing in for loops
+http://www.inanzzz.com/index.php/post/j3n1/creating-a-concurrent-tcp-client-and-server-example-with-golang
+
+This link was helpful in sending structs through a connection using gob
+https://dchua.com/posts/2017-06-23-sending-your-structs-across-the-wire/
+
+
+
 
