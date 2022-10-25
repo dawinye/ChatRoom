@@ -35,7 +35,8 @@ that we tested. The flow of information with encoding and decoding can be seen i
 a function would need to encode/decode multiple times, we tried to reuse the encoder/decoder objects if it didn't generate errors.
 In the first set of encoding and decoding, the sending client and server encode/decode the message as a message struct. However,
 in the second encoding/decoding it is done as a string. This is because neither client needs to know all three parts of the message
-struct (sender needs to know it was delivered to recipient, recipient needs to know who send it plus the content).
+struct (sender needs to know it was delivered to recipient, recipient needs to know who send it plus the content). To do this
+the message struct had three values, To, From and Content which were all strings. 
 <img src="diagram.png"> 
 
 All communication written and read between the server and clients are stored in byte arrays of size 500.
@@ -44,8 +45,8 @@ as significantly longer messages were not needed, and it is impossible to dynami
 size as the message being read in (don't know how big the message is before we call conn.Read(arr), so 500 is sufficiently large enough.
 Finally, in regard to printing messages, our client uses <code>sliceHelper(msg[4:]) </code>. This is because we found that the first 4 
 bytes of a decoded byte array from gob are unnecessary, as well as the last bytes starting with the number 10 (new line char). These quirks in the byte array
-made us decide to process it so that the message would print nicer. It should be noticed that this will take O(log(n)) time, but we decided it was 
-worth the trade-off to have more streamlined messages.
+made us decide to process it so that the message would print nicer without the new line. It should be noticed that this will take O(log(n)) time, but we decided it was 
+worth the trade-off to have more streamlined messages. The recipient is the only one that needs to check for the new line character, which is seen sliceHelper().
 
 For future implementations, it would be possible for us to have different sized byte arrays created say 1,000, 10,000, and 1,000,000 and basically have copies of the different functions with only their array size being different. This would allow cases where someone may want to send a 1,000 character message or even 10,000. However we decided it was not necessary to do this for the homework but could be part of a larger implementation.
 
