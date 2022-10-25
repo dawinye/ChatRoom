@@ -15,7 +15,7 @@ type Message struct {
 	To, From, Content string
 }
 
-//use to help slice the decoded string from gob
+// use to help slice the decoded string from gob
 func sliceHelper(sl []byte) []byte {
 	for i, v := range sl {
 		if v == 10 {
@@ -25,7 +25,7 @@ func sliceHelper(sl []byte) []byte {
 	return sl
 }
 
-//reads from the connection and prints it out if another client sends a message
+// reads from the connection and prints it out if another client sends a message
 func receiveMessage(conn net.Conn) {
 	defer conn.Close()
 	msg := make([]byte, 500)
@@ -109,10 +109,10 @@ func main() {
 		msg.From = username
 
 		//use gob to encode the message and write to the server
-		bin_buf2 := new(bytes.Buffer)
-		gobobj2 := gob.NewEncoder(bin_buf2)
-		gobobj2.Encode(msg)
-		c.Write(bin_buf2.Bytes())
+		bin_buf = new(bytes.Buffer)
+		gobobj = gob.NewEncoder(bin_buf)
+		gobobj.Encode(msg)
+		c.Write(bin_buf.Bytes())
 	}
 
 }
