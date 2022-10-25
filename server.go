@@ -27,7 +27,6 @@ type Message struct {
 // defined in a server, as well as check if a username should be rejected
 // if it already exists in the server
 var m = make(map[string]net.Conn)
-var finish bool = false
 
 // use a connection handler to ensure each server can handle multiple clients
 func handleConn(conn net.Conn) {
