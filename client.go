@@ -15,6 +15,16 @@ type Message struct {
 	To, From, Content string
 }
 
+//use to help slice the decoded string from gob
+func sliceHelper(sl []byte) []byte {
+	for i, v := range sl {
+		if v == 10 {
+			return sl[:i]
+		}
+	}
+	return sl
+}
+
 //reads from the connection and prints it out if another client sends a message
 func receiveMessage(conn net.Conn) {
 	defer conn.Close()
@@ -34,14 +44,11 @@ func receiveMessage(conn net.Conn) {
 		gobobj := gob.NewDecoder(tmpbuff)
 		gobobj.Decode(msg)
 
-		if strings.Compare(string(msg[:4]), "EXIT") == 0 {
-			os.Exit(1)
-		} else {
-			fmt.Println(string(msg[:50])) // [ 29 20 20 0 ]
-			//msg = msg[:0]
-			fmt.Print(">> ")
-		}
-		//how can i clear this without doing it this way
+		fmt.Println(string(sliceHelper(msg[4:])))
+		fmt.Print(">> ")
+
+		//clear the message array so that the next time we receive a message we don't overwrite the old one,
+		//which could be problematic if
 		msg = make([]byte, 500)
 	}
 }
@@ -73,7 +80,10 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Fprint(c, username+"\n")
+	bin_buf := new(bytes.Buffer)
+	gobobj := gob.NewEncoder(bin_buf)
+	gobobj.Encode(username)
+	c.Write(bin_buf.Bytes())
 	for {
 
 		reader := bufio.NewReader(os.Stdin)
@@ -99,10 +109,10 @@ func main() {
 		msg.From = username
 
 		//use gob to encode the message and write to the server
-		bin_buf := new(bytes.Buffer)
-		gobobj := gob.NewEncoder(bin_buf)
-		gobobj.Encode(msg)
-		c.Write(bin_buf.Bytes())
+		bin_buf2 := new(bytes.Buffer)
+		gobobj2 := gob.NewEncoder(bin_buf2)
+		gobobj2.Encode(msg)
+		c.Write(bin_buf2.Bytes())
 	}
 
 }

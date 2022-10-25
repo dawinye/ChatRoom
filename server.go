@@ -31,18 +31,22 @@ var finish bool = false
 
 //use a connection handler to ensure each server can handle multiple clients
 func handleConn(conn net.Conn) {
-	reader := bufio.NewReader(conn)
-	text, _ := reader.ReadString('\n')
-	username := strings.TrimSpace(string(text))
-	m[username] = conn
-
+	usernamebuf := make([]byte, 500)
+	conn.Read(usernamebuf)
+	username := new(string)
+	tmpBuff := bytes.NewBuffer(usernamebuf)
+	gobObj := gob.NewDecoder(tmpBuff)
+	gobObj.Decode(username)
+	m[*username] = conn
 	//defer conn.Close()
 	tmp := make([]byte, 500)
 	for {
 		_, err := conn.Read(tmp)
 		if err == io.EOF || string(tmp[:4]) == "EXIT" {
-			delete(m, username)
+			delete(m, *username)
 			conn.Close()
+			fmt.Println(*username + " has disconnected from this server")
+			fmt.Print(">>")
 			return
 		}
 		if err != nil {
@@ -55,11 +59,11 @@ func handleConn(conn net.Conn) {
 		//	conn.Close()
 		//	return
 		//}
-		tmpbuff := bytes.NewBuffer(tmp)
-		tmpstruct := new(Message)
-		gobobj := gob.NewDecoder(tmpbuff)
-		gobobj.Decode(tmpstruct)
-		sendMessage(*tmpstruct)
+		tmpBuff = bytes.NewBuffer(tmp)
+		tmpStruct := new(Message)
+		gobObj = gob.NewDecoder(tmpBuff)
+		gobObj.Decode(tmpStruct)
+		sendMessage(*tmpStruct)
 
 	}
 }
@@ -81,6 +85,10 @@ func sendMessage(msg Message) {
 
 	if present == false {
 		strOne := "Failure"
+		gobobj.Encode(strOne)
+		fromConn.Write(bin_buf.Bytes())
+	} else if msg.From == msg.To {
+		strOne := "Cannot send messages to yourself. Use a notepad to take notes instead of this MP."
 		gobobj.Encode(strOne)
 		fromConn.Write(bin_buf.Bytes())
 	} else {
