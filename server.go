@@ -134,8 +134,8 @@ func main() {
 
 	//check if the port number supplied falls within the preallocated ports
 	port, err := strconv.Atoi(args[1])
-	if err != nil || port < 0 || port > 65535 {
-		fmt.Println("Please rerun the program using \"go run server.go (port number between 0 and 65535)\"")
+	if err != nil || port < 1 || port > 65535 {
+		fmt.Println("Please rerun the program using \"go run server.go (port number between 1 and 65535, inclusive)\"")
 		return
 	}
 
