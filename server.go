@@ -14,22 +14,22 @@ import (
 	"strconv"
 )
 
-//message struct is defined in both the server and client files
-//this is because it is classified as undefined if it is only defined in one
-//and we use either go run server.go or go run client.go
-//(error pops up for the file that doesn't have it defined)
+// message struct is defined in both the server and client files
+// this is because it is classified as undefined if it is only defined in one
+// and we use either go run server.go or go run client.go
+// (error pops up for the file that doesn't have it defined)
 type Message struct {
 	To, From, Content string
 }
 
-//keep a map of usernames as keys and their connections as values
-//by using a map, we can check if the recipient of a message is already
-//defined in a server, as well as check if a username should be rejected
-//if it already exists in the server
+// keep a map of usernames as keys and their connections as values
+// by using a map, we can check if the recipient of a message is already
+// defined in a server, as well as check if a username should be rejected
+// if it already exists in the server
 var m = make(map[string]net.Conn)
 var finish bool = false
 
-//use a connection handler to ensure each server can handle multiple clients
+// use a connection handler to ensure each server can handle multiple clients
 func handleConn(conn net.Conn) {
 	usernamebuf := make([]byte, 500)
 	conn.Read(usernamebuf)
@@ -38,6 +38,8 @@ func handleConn(conn net.Conn) {
 	gobObj := gob.NewDecoder(tmpBuff)
 	gobObj.Decode(username)
 	m[*username] = conn
+	fmt.Println(*username + " has connected to this server")
+	fmt.Print(">> ")
 	//defer conn.Close()
 	tmp := make([]byte, 500)
 	for {
@@ -46,7 +48,7 @@ func handleConn(conn net.Conn) {
 			delete(m, *username)
 			conn.Close()
 			fmt.Println(*username + " has disconnected from this server")
-			fmt.Print(">>")
+			fmt.Print(">> ")
 			return
 		}
 		if err != nil {
@@ -68,10 +70,10 @@ func handleConn(conn net.Conn) {
 	}
 }
 
-//input is the message that the client sends back to the server
-//server checks if the recipient of the message is in the map
-//sends an error message to the sender if applicable, otherwise
-//sends a success message and delivers it to the recipient connection
+// input is the message that the client sends back to the server
+// server checks if the recipient of the message is in the map
+// sends an error message to the sender if applicable, otherwise
+// sends a success message and delivers it to the recipient connection
 func sendMessage(msg Message) {
 	fromConn := m[msg.From]
 	toConn, present := m[msg.To]
@@ -84,11 +86,11 @@ func sendMessage(msg Message) {
 	//c.Write(bin_buf.Bytes())
 
 	if present == false {
-		strOne := "Failure"
+		strOne := "Error: That user is not connected to the server. Maybe they will be here soon!"
 		gobobj.Encode(strOne)
 		fromConn.Write(bin_buf.Bytes())
 	} else if msg.From == msg.To {
-		strOne := "Cannot send messages to yourself. Use a notepad to take notes instead of this MP."
+		strOne := "Error: Cannot send messages to yourself. Use a notepad to take notes instead of this MP."
 		gobobj.Encode(strOne)
 		fromConn.Write(bin_buf.Bytes())
 	} else {
