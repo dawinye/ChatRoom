@@ -89,7 +89,7 @@ func sendMessage(msg Message) {
 		gobobj.Encode(strOne)
 		fromConn.Write(bin_buf.Bytes())
 	} else if msg.From == msg.To {
-		strOne := "Error: Cannot send messages to yourself. Use a notepad to take notes instead of this MP."
+		strOne := "Cannot send messages to yourself. Use a notepad to take notes instead of this program."
 		gobobj.Encode(strOne)
 		fromConn.Write(bin_buf.Bytes())
 	} else {

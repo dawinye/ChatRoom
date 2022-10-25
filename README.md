@@ -30,7 +30,18 @@ for when the server wants to exit, as the program will iterate through the map a
 as well as close their connections. Finally, the stopServer() function runs a continuous for loop to check if
 the exit command is entered.
 
+For serialization, we decided to use gob as that was what our HW1 Q3 told us that it was the fastest out of the methods
+that we tested. The flow of information with encoding and decoding can be seen in the following figure. In instances where
+a function would need to encode/decode multiple times, we tried to reuse the encoder/decoder objects if it didn't generate errors.
 
+All communication written and read between the server and clients are stored in byte arrays of size 500.
+This means that there will be errors or cut off text if messages are longer than 500 characters. We decided to use 500
+as significantly longer messages were not needed, and it is impossible to dynamically allocate an array of the specific
+size as the message being read in (don't know how big the message is before we call conn.Read(arr), so 500 is sufficiently large enough.
+Finally, in regard to printing messages, our client uses <code>sliceHelper(msg[4:]) </code>. This is because we found that the first 4 
+bytes of a decoded byte array from gob are unnecessary, as well as the last bytes starting with the number 10. These quirks in the byte array
+made us decide to process it so that the message would print nicer. It should be noticed that this will take O(n) time, but we decided it was 
+worth the trade-off to have more streamlined messages.
 
 
 
